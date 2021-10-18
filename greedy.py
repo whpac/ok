@@ -1,4 +1,5 @@
 from load import loadData
+import sys
 
 def greedy(processors: int, processes: list):
     tab = []
@@ -22,7 +23,11 @@ def greedy(processors: int, processes: list):
 
 
 def main():
-    data = loadData('data.txt')
+    fname = 'data.txt'
+    if len(sys.argv) >= 2:
+        fname = sys.argv[1]
+
+    data = loadData(fname)
 
     result = greedy(data['processors'], data['processes'])
     for i in range(len(result)):
