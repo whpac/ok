@@ -6,11 +6,14 @@ from time import time
 # Konfiguracja algorytmu
 AVG_GENE_MUTATIONS = 2              # Średnia liczba mutacji w rozwiązaniu, które mutuje
 CHILDREN_IN_ITERATION = 50          # Liczba dzieci w iteracji algorytmu
-MAX_DURATION = 300          # Maksymalny czas pracy w sekundach
-MAX_ITERATIONS = 50         # Maksymalna liczba iteracji
-POPULATION_SIZE = 100       # Rozmiar populacji
+MAX_DURATION = 300                  # Maksymalny czas pracy w sekundach
+MAX_ITERATIONS = 50                 # Maksymalna liczba iteracji
+POPULATION_SIZE = 100               # Rozmiar populacji
 POPULATION_TO_CROSSOVER = 1         # Odsetek populacji, który się rozmnaża
 SOLUTION_MUTATION_CHANCE = 0.2      # Prawdopodobieństwo, że w rozwiązaniu zajdzie mutacja
+
+# Diagnostyka
+PRINT_STATS_FREQ = 10               # Co ile iteracji wyświetlać status
 
 # Zmienne związane z pracą programu
 best_qualities = []
@@ -36,6 +39,7 @@ def genetic(proc_count, exec_times):
         doGeneticIteration(population)
         best_qualities.append(measureSolutionQuality(population[0]))
         iterations += 1
+        printStats()
 
 
 # Sprawdza czas trwania, jakość rozwiązania i ew. inne metryki i decyduje czy kontynuować
@@ -43,10 +47,6 @@ def canContinue():
     global best_qualities, iterations, start_time
     duration = time() - start_time
 
-    if iterations > 0:
-        duration = int(duration * 10) / 10
-        print(f'Iteration #{iterations}: {duration}s elapsed, Cmax: {best_qualities[-1]}.')
-    
     return (iterations < MAX_ITERATIONS
         and duration <= MAX_DURATION)
 
@@ -135,6 +135,24 @@ def measureSolutionQuality(solution):
     return max(processor_occupancy)
 
 
+# Wypisuje statystyki co określoną liczbę iteracji
+def printStats():
+    if iterations % PRINT_STATS_FREQ != 0:
+        return
+    duration = round(time() - start_time, 1)
+    print(f'[{iterations: >3}]: {duration: >6}s elapsed, Cmax: {best_qualities[-1]}')
+
+
+# Wypisuje końcowe statystyki
+def printFinalStats():
+    duration = time() - start_time
+    duration = round(duration, 1)
+    print('\nFinished job')
+    print(f'    {iterations} iterations performed')
+    print(f'    {duration} seconds')
+    print(f'    {best_qualities[-1]} = Cmax')
+
+
 def main():
     fname = 'data.txt'
     if len(sys.argv) >= 2:
@@ -142,5 +160,6 @@ def main():
 
     data = loadData(fname)
     genetic(data['processors'], data['processes'])
+    printFinalStats()
 
 main()
