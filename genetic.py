@@ -14,16 +14,24 @@ best_qualities = []
 iterations = 0
 start_time = 0.0
 
+# Dane dla algorytmu
+execution_times = []
+processor_count = 0
+
 # Punkt wejściowy algorytmu
-def genetic(processor_count, execution_times):
+def genetic(proc_count, exec_times):
     global best_qualities, iterations, start_time
+    global execution_times, processor_count
+
+    execution_times = exec_times
+    processor_count = proc_count
     start_time = time()
 
-    population = generateInitialSolutions(POPULATION_SIZE, processor_count, len(execution_times))
-    sortPopulation(population, processor_count, execution_times)
+    population = generateInitialSolutions(POPULATION_SIZE)
+    sortPopulation(population)
     while canContinue():
-        doGeneticIteration(population, processor_count, execution_times)
-        best_qualities.append(measureSolutionQuality(population[0], processor_count, execution_times))
+        doGeneticIteration(population)
+        best_qualities.append(measureSolutionQuality(population[0]))
         iterations += 1
 
 
@@ -41,16 +49,18 @@ def canContinue():
 
 
 # Wykonuje iterację algorytmu genetycznego
-def doGeneticIteration(population, processor_count, execution_times):
+def doGeneticIteration(population):
     initial_population_size = len(population)
     performCrossOvers(population)
-    performMutations(population, processor_count)
-    sortPopulation(population, processor_count, execution_times)
+    performMutations(population)
+    sortPopulation(population)
     removeWorstSolutions(population, initial_population_size)
 
 
 # Generuje zestaw początkowych rozwiązań
-def generateInitialSolutions(population_size, processor_count, process_count):
+def generateInitialSolutions(population_size):
+    global execution_times, processor_count
+    process_count = len(execution_times)
     population = [
         [ randint(0, processor_count-1) for _ in range(process_count) ] for _ in range(population_size)
     ]
@@ -81,24 +91,27 @@ def crossOver(solution1, solution2):
 
 
 # Wybiera rozwiązania i dokonuje mutacji
-def performMutations(population, processor_count):
+def performMutations(population):
+    global execution_times, processor_count
     # TODO
     return population
 
 
 # Mutuje rozwiązanie i zwraca nową kopię
-def mutate(solution, processor_count):
+def mutate(solution):
+    global execution_times, processor_count
     # TODO
     return solution
 
 
 # Sortuje populację od najlepszych rozwiązań
-def sortPopulation(population, processor_count, execution_times):
-    population.sort(key=lambda s: measureSolutionQuality(s, processor_count, execution_times))
+def sortPopulation(population):
+    population.sort(key=lambda s: measureSolutionQuality(s))
 
 
 # Mierzy jakość rozwiązania (im mniej tym lepiej)
-def measureSolutionQuality(solution, processor_count, execution_times):
+def measureSolutionQuality(solution):
+    global execution_times, processor_count
     processor_occupancy = [0] * processor_count
     for i in range(len(solution)):
         proc = solution[i]
