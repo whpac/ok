@@ -65,6 +65,7 @@ def removeWorstSolutions(population, target_size):
 
 # Wybiera i rozmnaża rozwiązania, dodając je do populacji
 def performCrossOvers(population):
+    # TODO
     return population
 
 
@@ -81,11 +82,13 @@ def crossOver(solution1, solution2):
 
 # Wybiera rozwiązania i dokonuje mutacji
 def performMutations(population, processor_count):
+    # TODO
     return population
 
 
 # Mutuje rozwiązanie i zwraca nową kopię
 def mutate(solution, processor_count):
+    # TODO
     return solution
 
 
