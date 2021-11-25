@@ -20,10 +20,10 @@ def genetic(processor_count, execution_times):
     start_time = time()
 
     population = generateInitialSolutions(POPULATION_SIZE, processor_count, len(execution_times))
-    sortPopulation(population, execution_times)
+    sortPopulation(population, processor_count, execution_times)
     while canContinue():
         doGeneticIteration(population, processor_count, execution_times)
-        best_qualities.append(measureSolutionQuality(population[0], execution_times))
+        best_qualities.append(measureSolutionQuality(population[0], processor_count, execution_times))
         iterations += 1
 
 
@@ -32,15 +32,12 @@ def canContinue():
     global best_qualities, iterations, start_time
     duration = time() - start_time
 
-    cont = (iterations <= MAX_ITERATIONS
-        and duration <= MAX_DURATION)
-    
-    if cont:
+    if iterations > 0:
         duration = int(duration * 10) / 10
-        best = best_qualities[-1] if len(best_qualities) > 0 else '+Infinity'
-        print(f'Iteration #{iterations}: {duration}s elapsed, Cmax: {best}.')
+        print(f'Iteration #{iterations}: {duration}s elapsed, Cmax: {best_qualities[-1]}.')
     
-    return cont
+    return (iterations < MAX_ITERATIONS
+        and duration <= MAX_DURATION)
 
 
 # Wykonuje iterację algorytmu genetycznego
@@ -48,7 +45,7 @@ def doGeneticIteration(population, processor_count, execution_times):
     initial_population_size = len(population)
     performCrossOvers(population)
     performMutations(population, processor_count)
-    sortPopulation(population, execution_times)
+    sortPopulation(population, processor_count, execution_times)
     removeWorstSolutions(population, initial_population_size)
 
 
@@ -93,13 +90,17 @@ def mutate(solution, processor_count):
 
 
 # Sortuje populację od najlepszych rozwiązań
-def sortPopulation(population, execution_times):
-    population.sort(key=lambda s: measureSolutionQuality(s, execution_times))
+def sortPopulation(population, processor_count, execution_times):
+    population.sort(key=lambda s: measureSolutionQuality(s, processor_count, execution_times))
 
 
 # Mierzy jakość rozwiązania (im mniej tym lepiej)
-def measureSolutionQuality(solution, execution_times):
-    return -1
+def measureSolutionQuality(solution, processor_count, execution_times):
+    processor_occupancy = [0] * processor_count
+    for i in range(len(solution)):
+        proc = solution[i]
+        processor_occupancy[proc] += execution_times[i]
+    return max(processor_occupancy)
 
 
 def main():
