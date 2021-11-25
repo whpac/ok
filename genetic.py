@@ -37,7 +37,8 @@ def canContinue():
     
     if cont:
         duration = int(duration * 10) / 10
-        print(f'Iteration #{iterations}: {duration}s elapsed, Cmax: {best_qualities[-1]}.')
+        best = best_qualities[-1] if len(best_qualities) > 0 else '+Infinity'
+        print(f'Iteration #{iterations}: {duration}s elapsed, Cmax: {best}.')
     
     return cont
 
