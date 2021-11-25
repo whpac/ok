@@ -1,5 +1,7 @@
-from time import time
+from load import loadData
 from random import random
+import sys
+from time import time
 
 # Konfiguracja algorytmu
 MAX_DURATION = 300          # Maksymalny czas pracy w sekundach
@@ -13,15 +15,15 @@ iterations = 0
 start_time = 0.0
 
 # Punkt wejściowy algorytmu
-def genetic():
+def genetic(data):
     global best_qualities, iterations, start_time
     start_time = time()
 
-    population = generateInitialSolutions(POPULATION_SIZE, None)
-    sortPopulation(population)
+    population = generateInitialSolutions(POPULATION_SIZE, data)
+    sortPopulation(population, data['processes'])
     while canContinue():
-        doGeneticIteration(population)
-        best_qualities.append(measureSolutionQuality(population[0], None))
+        doGeneticIteration(population, data['processors'], data['processes'])
+        best_qualities.append(measureSolutionQuality(population[0], data['processes']))
         iterations += 1
 
 
@@ -41,11 +43,11 @@ def canContinue():
 
 
 # Wykonuje iterację algorytmu genetycznego
-def doGeneticIteration(population):
+def doGeneticIteration(population, processor_count, execution_times):
     initial_population_size = len(population)
     performCrossOvers(population)
-    performMutations(population, None)
-    sortPopulation(population)
+    performMutations(population, processor_count)
+    sortPopulation(population, execution_times)
     removeWorstSolutions(population, initial_population_size)
 
 
@@ -87,8 +89,8 @@ def mutate(solution, processor_count):
 
 
 # Sortuje populację od najlepszych rozwiązań
-def sortPopulation(population):
-    population.sort(key=lambda s: measureSolutionQuality(s, None))
+def sortPopulation(population, execution_times):
+    population.sort(key=lambda s: measureSolutionQuality(s, execution_times))
 
 
 # Mierzy jakość rozwiązania (im mniej tym lepiej)
@@ -97,6 +99,11 @@ def measureSolutionQuality(solution, execution_times):
 
 
 def main():
-    genetic()
+    fname = 'data.txt'
+    if len(sys.argv) >= 2:
+        fname = sys.argv[1]
+
+    data = loadData(fname)
+    genetic(data)
 
 main()
