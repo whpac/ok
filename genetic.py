@@ -5,12 +5,12 @@ from time import time
 
 # Konfiguracja algorytmu
 AVG_GENE_MUTATIONS = 2              # Średnia liczba mutacji w rozwiązaniu, które mutuje
-CHILDREN_IN_ITERATION = 10          # Liczba dzieci w iteracji algorytmu
+CHILDREN_IN_ITERATION = 50          # Liczba dzieci w iteracji algorytmu
 MAX_DURATION = 300          # Maksymalny czas pracy w sekundach
 MAX_ITERATIONS = 50         # Maksymalna liczba iteracji
 POPULATION_SIZE = 100       # Rozmiar populacji
-POPULATION_TO_CROSSOVER = 0.2       # Odsetek populacji, który się rozmnaża
-SOLUTION_MUTATION_CHANCE = 0.1      # Prawdopodobieństwo, że w rozwiązaniu zajdzie mutacja
+POPULATION_TO_CROSSOVER = 1         # Odsetek populacji, który się rozmnaża
+SOLUTION_MUTATION_CHANCE = 0.2      # Prawdopodobieństwo, że w rozwiązaniu zajdzie mutacja
 
 # Zmienne związane z pracą programu
 best_qualities = []
