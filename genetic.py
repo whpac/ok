@@ -1,5 +1,5 @@
 from load import loadData
-from random import random
+from random import random, randint
 import sys
 from time import time
 
@@ -15,15 +15,15 @@ iterations = 0
 start_time = 0.0
 
 # Punkt wejściowy algorytmu
-def genetic(data):
+def genetic(processor_count, execution_times):
     global best_qualities, iterations, start_time
     start_time = time()
 
-    population = generateInitialSolutions(POPULATION_SIZE, data)
-    sortPopulation(population, data['processes'])
+    population = generateInitialSolutions(POPULATION_SIZE, processor_count, len(execution_times))
+    sortPopulation(population, execution_times)
     while canContinue():
-        doGeneticIteration(population, data['processors'], data['processes'])
-        best_qualities.append(measureSolutionQuality(population[0], data['processes']))
+        doGeneticIteration(population, processor_count, execution_times)
+        best_qualities.append(measureSolutionQuality(population[0], execution_times))
         iterations += 1
 
 
@@ -53,8 +53,11 @@ def doGeneticIteration(population, processor_count, execution_times):
 
 
 # Generuje zestaw początkowych rozwiązań
-def generateInitialSolutions(population_size, constraints):
-    return []
+def generateInitialSolutions(population_size, processor_count, process_count):
+    population = [
+        [ randint(0, processor_count-1) for _ in range(process_count) ] for _ in range(population_size)
+    ]
+    return population
 
 
 # Usuwa najgorsze rozwiązania z populacji, tak by przywrócić jej pierwotny rozmiar
@@ -105,6 +108,6 @@ def main():
         fname = sys.argv[1]
 
     data = loadData(fname)
-    genetic(data)
+    genetic(data['processors'], data['processes'])
 
 main()
