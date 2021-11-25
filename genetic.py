@@ -4,11 +4,13 @@ import sys
 from time import time
 
 # Konfiguracja algorytmu
+AVG_GENE_MUTATIONS = 2              # Średnia liczba mutacji w rozwiązaniu, które mutuje
 CHILDREN_IN_ITERATION = 10          # Liczba dzieci w iteracji algorytmu
 MAX_DURATION = 300          # Maksymalny czas pracy w sekundach
 MAX_ITERATIONS = 50         # Maksymalna liczba iteracji
 POPULATION_SIZE = 100       # Rozmiar populacji
 POPULATION_TO_CROSSOVER = 0.2       # Odsetek populacji, który się rozmnaża
+SOLUTION_MUTATION_CHANCE = 0.1      # Prawdopodobieństwo, że w rozwiązaniu zajdzie mutacja
 
 # Zmienne związane z pracą programu
 best_qualities = []
@@ -100,15 +102,22 @@ def crossOver(solution1, solution2):
 # Wybiera rozwiązania i dokonuje mutacji
 def performMutations(population):
     global execution_times, processor_count
-    # TODO
+    for i in range(len(population)):
+        if random() >= SOLUTION_MUTATION_CHANCE:
+            continue
+        new_solution = mutate(population[i])
+        population.append(new_solution)
     pass
 
 
 # Mutuje rozwiązanie i zwraca nową kopię
 def mutate(solution):
     global execution_times, processor_count
-    # TODO
-    return solution
+    new_solution = solution.copy()
+    for i in range(len(solution)):
+        if random() < AVG_GENE_MUTATIONS / processor_count:
+            new_solution[i] = randint(0, processor_count-1)
+    return new_solution
 
 
 # Sortuje populację od najlepszych rozwiązań
