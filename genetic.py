@@ -1,14 +1,38 @@
+import time
+
+# Konfiguracja algorytmu
+MAX_DURATION = 300          # Maksymalny czas pracy w sekndach
+MAX_ITERATIONS = 50         # Maksymalna liczba iteracji
+
+# Zmienne związane z pracą programu
+iterations = 0
+start_time = 0.0
+
 # Punkt wejściowy algorytmu
 def genetic():
+    global iterations, start_time
+    start_time = time.time()
+
     population = generateInitialSolutions(None, None)
     sortPopulation(population)
     while canContinue():
         doGeneticIteration(population)
+        iterations += 1
 
 
 # Sprawdza czas trwania, jakość rozwiązania i ew. inne metryki i decyduje czy kontynuować
 def canContinue():
-    return True
+    global iterations, start_time
+    duration = time.time() - start_time
+
+    cont = (iterations <= MAX_ITERATIONS
+        and duration <= MAX_DURATION)
+    
+    if cont:
+        duration = int(duration * 10) / 10
+        print(f'Iteration #{iterations}: {duration}s elapsed.')
+    
+    return cont
 
 
 # Wykonuje iterację algorytmu genetycznego
@@ -59,3 +83,9 @@ def sortPopulation(population):
 # Mierzy jakość rozwiązania (im mniej tym lepiej)
 def measureSolutionQuality(solution, execution_times):
     return -1
+
+
+def main():
+    genetic()
+
+main()
