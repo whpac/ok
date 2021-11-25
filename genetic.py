@@ -4,6 +4,7 @@ import sys
 from time import time
 
 # Konfiguracja algorytmu
+CHILDREN_IN_ITERATION = 10          # Liczba dzieci w iteracji algorytmu
 MAX_DURATION = 300          # Maksymalny czas pracy w sekundach
 MAX_ITERATIONS = 50         # Maksymalna liczba iteracji
 POPULATION_SIZE = 100       # Rozmiar populacji
@@ -75,8 +76,14 @@ def removeWorstSolutions(population, target_size):
 
 # Wybiera i rozmnaża rozwiązania, dodając je do populacji
 def performCrossOvers(population):
-    # TODO
-    return population
+    reproducible = int(POPULATION_SIZE * POPULATION_TO_CROSSOVER - 1e-9)
+    for i in range(CHILDREN_IN_ITERATION):
+        parent1 = randint(0, reproducible)
+        parent2 = randint(0, reproducible - 1)
+        # Dba o to, by rozwiązanie nie rozmnażało się z samym sobą
+        parent2 += 1 if parent2 >= parent1 else 0
+        child = crossOver(population[parent1], population[parent2])
+        population.append(child)
 
 
 # Rozmnaża rozwiązania
@@ -94,7 +101,7 @@ def crossOver(solution1, solution2):
 def performMutations(population):
     global execution_times, processor_count
     # TODO
-    return population
+    pass
 
 
 # Mutuje rozwiązanie i zwraca nową kopię
