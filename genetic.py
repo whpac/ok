@@ -4,7 +4,7 @@ import sys
 from time import time
 
 # Konfiguracja algorytmu
-AVG_GENE_MUTATIONS = 2              # Średnia liczba mutacji w rozwiązaniu, które mutuje
+GENE_MUTATION_CHANCE = 0.2          # Prawdopodobieństwo mutacji genu w rozwiązaniu, które mutuje
 CHILDREN_IN_ITERATION = 50          # Liczba dzieci w iteracji algorytmu
 MAX_DURATION = 300                  # Maksymalny czas pracy w sekundach
 MAX_ITERATIONS = 50                 # Maksymalna liczba iteracji
@@ -99,7 +99,7 @@ def removeWorstSolutions(population, target_size):
 # Wybiera i rozmnaża rozwiązania, dodając je do populacji
 def performCrossOvers(population):
     reproducible = int(POPULATION_SIZE * POPULATION_TO_CROSSOVER - 1e-9)
-    for i in range(CHILDREN_IN_ITERATION):
+    for _ in range(CHILDREN_IN_ITERATION):
         parent1 = randint(0, reproducible)
         parent2 = randint(0, reproducible - 1)
         # Dba o to, by rozwiązanie nie rozmnażało się z samym sobą
@@ -135,7 +135,7 @@ def mutate(solution):
     global execution_times, processor_count
     new_solution = solution.copy()
     for i in range(len(solution)):
-        if random() < AVG_GENE_MUTATIONS / processor_count:
+        if random() < GENE_MUTATION_CHANCE:
             new_solution[i] = randint(0, processor_count-1)
     return new_solution
 
