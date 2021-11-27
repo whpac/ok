@@ -8,7 +8,7 @@ from time import time
 GENE_MUTATION_CHANCE = 0.2          # Prawdopodobieństwo mutacji genu w rozwiązaniu, które mutuje
 CHILDREN_IN_ITERATION = 50          # Liczba dzieci w iteracji algorytmu
 MAX_DURATION = 300                  # Maksymalny czas pracy w sekundach
-MAX_ITERATIONS = 50                 # Maksymalna liczba iteracji
+MAX_ITERATIONS = 500                # Maksymalna liczba iteracji
 POPULATION_SIZE = 100               # Rozmiar populacji
 POPULATION_TO_CROSSOVER = 1         # Odsetek populacji, który się rozmnaża
 RANDOM_SOLUTIONS = 0.5              # Odsetek losowych rozwiązań w pierwotnej populacji
