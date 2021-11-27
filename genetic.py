@@ -3,6 +3,7 @@ from load import loadData
 from random import random, randint, shuffle
 import sys
 from time import time
+from typing import List
 
 # Konfiguracja algorytmu
 GENE_MUTATION_CHANCE = 0.2          # Prawdopodobieństwo mutacji genu w rozwiązaniu, które mutuje
@@ -27,7 +28,7 @@ execution_times = []
 processor_count = 0
 
 # Punkt wejściowy algorytmu
-def genetic(proc_count, exec_times):
+def genetic(proc_count: int, exec_times: List[int]) -> None:
     global best_qualities, iterations, start_time
     global execution_times, processor_count
 
@@ -45,7 +46,7 @@ def genetic(proc_count, exec_times):
 
 
 # Sprawdza czas trwania, jakość rozwiązania i ew. inne metryki i decyduje czy kontynuować
-def canContinue():
+def canContinue() -> bool:
     global best_qualities, iterations, start_time
     global MAX_DURATION, MAX_ITERATIONS
     duration = time() - start_time
@@ -68,7 +69,7 @@ def canContinue():
 
 
 # Wykonuje iterację algorytmu genetycznego
-def doGeneticIteration(population):
+def doGeneticIteration(population: List[List[int]]) -> None:
     initial_population_size = len(population)
     performCrossOvers(population)
     performMutations(population)
@@ -77,7 +78,7 @@ def doGeneticIteration(population):
 
 
 # Generuje zestaw początkowych rozwiązań
-def generateInitialSolutions(population_size):
+def generateInitialSolutions(population_size: int) -> List[List[int]]:
     global execution_times, processor_count
     process_count = len(execution_times)
     population = [None] * population_size
@@ -90,7 +91,7 @@ def generateInitialSolutions(population_size):
 
 
 # Buduje rozwiązanie algorytmem zachłannym
-def buildSolutionGreedy():
+def buildSolutionGreedy() -> List[int]:
     global execution_times, processor_count
     solution = [0] * len(execution_times)
     processor_usage = [0] * processor_count
@@ -106,13 +107,13 @@ def buildSolutionGreedy():
 
 
 # Usuwa najgorsze rozwiązania z populacji, tak by przywrócić jej pierwotny rozmiar
-def removeWorstSolutions(population, target_size):
+def removeWorstSolutions(population: List[List[int]], target_size: int) -> None:
     while len(population) > target_size:
         population.pop()
 
 
 # Wybiera i rozmnaża rozwiązania, dodając je do populacji
-def performCrossOvers(population):
+def performCrossOvers(population: List[List[int]]) -> None:
     reproducible = int(POPULATION_SIZE * POPULATION_TO_CROSSOVER - 1e-9)
     for _ in range(CHILDREN_IN_ITERATION):
         parent1 = randint(0, reproducible)
@@ -124,7 +125,7 @@ def performCrossOvers(population):
 
 
 # Rozmnaża rozwiązania
-def crossOver(solution1, solution2):
+def crossOver(solution1: List[int], solution2: List[int]) -> List[int]:
     offspring = [0] * len(solution1)
     for i in range(len(solution1)):
         if solution1[i] == solution2[i]:
@@ -135,18 +136,17 @@ def crossOver(solution1, solution2):
 
 
 # Wybiera rozwiązania i dokonuje mutacji
-def performMutations(population):
+def performMutations(population: List[List[int]]) -> None:
     global execution_times, processor_count
     for i in range(len(population)):
         if random() >= SOLUTION_MUTATION_CHANCE:
             continue
         new_solution = mutate(population[i])
         population.append(new_solution)
-    pass
 
 
 # Mutuje rozwiązanie i zwraca nową kopię
-def mutate(solution):
+def mutate(solution: List[int]) -> List[int]:
     global execution_times, processor_count
     new_solution = solution.copy()
     for i in range(len(solution)):
@@ -156,12 +156,12 @@ def mutate(solution):
 
 
 # Sortuje populację od najlepszych rozwiązań
-def sortPopulation(population):
+def sortPopulation(population: List[List[int]]) -> None:
     population.sort(key=lambda s: measureSolutionQuality(s))
 
 
 # Mierzy jakość rozwiązania (im mniej tym lepiej)
-def measureSolutionQuality(solution):
+def measureSolutionQuality(solution: List[int]) -> None:
     global execution_times, processor_count
     processor_occupancy = [0] * processor_count
     for i in range(len(solution)):
@@ -171,7 +171,7 @@ def measureSolutionQuality(solution):
 
 
 # Wypisuje statystyki co określoną liczbę iteracji
-def printStats():
+def printStats() -> None:
     if iterations % PRINT_STATS_FREQ != 0:
         return
     duration = round(time() - start_time, 1)
@@ -180,7 +180,7 @@ def printStats():
 
 
 # Wypisuje końcowe statystyki
-def printFinalStats():
+def printFinalStats() -> None:
     global best_qualities, iterations, start_time
     global execution_times, processor_count
     optimum = round(sum(execution_times) / processor_count, 1)
@@ -194,7 +194,7 @@ def printFinalStats():
     print(f'    {optimum} = Cmax* <divisible tasks>')
 
 
-def main():
+def main() -> None:
     fname = 'data.txt'
     if len(sys.argv) >= 2:
         fname = sys.argv[1]
