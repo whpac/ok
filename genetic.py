@@ -1,5 +1,5 @@
 from load import loadData
-from random import random, randint
+from random import random, randint, shuffle
 import sys
 from time import time
 
@@ -10,7 +10,8 @@ MAX_DURATION = 300                  # Maksymalny czas pracy w sekundach
 MAX_ITERATIONS = 50                 # Maksymalna liczba iteracji
 POPULATION_SIZE = 100               # Rozmiar populacji
 POPULATION_TO_CROSSOVER = 1         # Odsetek populacji, który się rozmnaża
-SOLUTION_MUTATION_CHANCE = 0.2      # Prawdopodobieństwo, że w rozwiązaniu zajdzie mutacja
+RANDOM_SOLUTIONS = 0.5              # Odsetek losowych rozwiązań w pierwotnej populacji
+SOLUTION_MUTATION_CHANCE = 0.5      # Prawdopodobieństwo, że w rozwiązaniu zajdzie mutacja
 
 # Diagnostyka
 PRINT_STATS_FREQ = 10               # Co ile iteracji wyświetlać status
@@ -64,10 +65,29 @@ def doGeneticIteration(population):
 def generateInitialSolutions(population_size):
     global execution_times, processor_count
     process_count = len(execution_times)
-    population = [
-        [ randint(0, processor_count-1) for _ in range(process_count) ] for _ in range(population_size)
-    ]
+    population = [None] * population_size
+    for i in range(population_size):
+        if i / population_size < RANDOM_SOLUTIONS:
+            population[i] = [ randint(0, processor_count-1) for _ in range(process_count) ]
+        else:
+            population[i] = buildSolutionGreedy()
     return population
+
+
+# Buduje rozwiązanie algorytmem zachłannym
+def buildSolutionGreedy():
+    global execution_times, processor_count
+    solution = [0] * len(execution_times)
+    processor_usage = [0] * processor_count
+    order = list(range(len(execution_times)))
+    shuffle(order)
+
+    for i in order:
+        proc_index_min = min(range(len(processor_usage)), key=processor_usage.__getitem__)
+        processor_usage[proc_index_min] += execution_times[i]
+        solution[i] = proc_index_min
+
+    return solution
 
 
 # Usuwa najgorsze rozwiązania z populacji, tak by przywrócić jej pierwotny rozmiar
