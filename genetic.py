@@ -1,3 +1,4 @@
+from math import log10
 from load import loadData
 from random import random, randint, shuffle
 import sys
@@ -160,17 +161,23 @@ def printStats():
     if iterations % PRINT_STATS_FREQ != 0:
         return
     duration = round(time() - start_time, 1)
-    print(f'[{iterations: >3}]: {duration: >6}s elapsed, Cmax: {best_qualities[-1]}')
+    digits = int(log10(MAX_ITERATIONS)) + 1
+    print(f'[{iterations: >{digits}}]: {duration: >6}s elapsed, Cmax: {best_qualities[-1]}')
 
 
 # Wypisuje końcowe statystyki
 def printFinalStats():
+    global best_qualities, iterations, start_time
+    global execution_times, processor_count
+    optimum = round(sum(execution_times) / processor_count, 1)
+
     duration = time() - start_time
     duration = round(duration, 1)
     print('\nFinished job')
     print(f'    {iterations} iterations performed')
     print(f'    {duration} seconds')
-    print(f'    {best_qualities[-1]} = Cmax')
+    print(f'    \033[1;32m{best_qualities[-1]} = Cmax\033[0m')
+    print(f'    {optimum} = Cmax* <divisible tasks>')
 
 
 def main():
