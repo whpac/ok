@@ -47,7 +47,21 @@ def genetic(proc_count, exec_times):
 # Sprawdza czas trwania, jakość rozwiązania i ew. inne metryki i decyduje czy kontynuować
 def canContinue():
     global best_qualities, iterations, start_time
+    global MAX_DURATION, MAX_ITERATIONS
     duration = time() - start_time
+
+    # Po zakończeniu wykonywania programu można podnieść limity
+    if iterations >= MAX_ITERATIONS:
+        print('[?] Iteration limit reached. Continue for next 50? [y/N]? ', end='')
+        answer = input()
+        if answer.lower() == 'y':
+            MAX_ITERATIONS += 50
+    
+    if duration >= MAX_DURATION:
+        print('[?] Time limit reached. Continue for next 60 seconds? [y/N]? ', end='')
+        answer = input()
+        if answer.lower() == 'y':
+            MAX_DURATION = (time() + 60) - start_time
 
     return (iterations < MAX_ITERATIONS
         and duration <= MAX_DURATION)
