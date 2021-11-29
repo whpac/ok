@@ -84,9 +84,10 @@ def generateInitialSolutions(population_size: int) -> List[List[int]]:
     population = [None] * population_size
     for i in range(population_size):
         if i / population_size < RANDOM_SOLUTIONS:
-            population[i] = [ randint(0, processor_count-1) for _ in range(process_count) ]
+            solution = [ randint(0, processor_count-1) for _ in range(process_count) ]
         else:
-            population[i] = buildSolutionGreedy()
+            solution = buildSolutionGreedy()
+        population[i] = solution
     return population
 
 
@@ -192,6 +193,7 @@ def printFinalStats() -> None:
     print(f'    {duration} seconds')
     print(f'    \033[1;32m{best_qualities[-1]} = Cmax\033[0m')
     print(f'    {optimum} = Cmax* <divisible tasks>')
+    print(f'    {best_qualities[0]} -> {best_qualities[-1]} genetic progress')
 
 
 def main() -> None:
