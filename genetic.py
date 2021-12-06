@@ -5,6 +5,13 @@ import sys
 from time import time
 from typing import List, Tuple
 
+#
+# Populacja przechowywana jest jako lista par. Pierwszy element pary
+# to jakość rozwiązania, a drugi - tablica przypisująca zadanie do procesora.
+# Ta realizacja pozwala na oszczędność w czasie działania i jest o ok. 70% szybsza
+# niż przechowywanie poszczególnych rozwiązań jako obiektów klasy Solution.
+#
+
 # Konfiguracja algorytmu
 GENE_MUTATION_CHANCE = 0.2          # Prawdopodobieństwo mutacji genu w rozwiązaniu, które mutuje
 CHILDREN_IN_ITERATION = 50          # Liczba dzieci w iteracji algorytmu
