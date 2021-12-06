@@ -3,7 +3,7 @@ from load import loadData
 from random import random, randint, shuffle
 import sys
 from time import time
-from typing import List
+from typing import List, Tuple
 
 # Konfiguracja algorytmu
 GENE_MUTATION_CHANCE = 0.2          # Prawdopodobieństwo mutacji genu w rozwiązaniu, które mutuje
@@ -40,7 +40,7 @@ def genetic(proc_count: int, exec_times: List[int]) -> None:
     sortPopulation(population)
     while canContinue():
         doGeneticIteration(population)
-        best_qualities.append(measureSolutionQuality(population[0]))
+        best_qualities.append(population[0][0])
         iterations += 1
         printStats()
 
@@ -69,7 +69,7 @@ def canContinue() -> bool:
 
 
 # Wykonuje iterację algorytmu genetycznego
-def doGeneticIteration(population: List[List[int]]) -> None:
+def doGeneticIteration(population: List[Tuple[int, List[int]]]) -> None:
     initial_population_size = len(population)
     performCrossOvers(population)
     performMutations(population)
@@ -78,7 +78,7 @@ def doGeneticIteration(population: List[List[int]]) -> None:
 
 
 # Generuje zestaw początkowych rozwiązań
-def generateInitialSolutions(population_size: int) -> List[List[int]]:
+def generateInitialSolutions(population_size: int) -> List[Tuple[int, List[int]]]:
     global execution_times, processor_count
     process_count = len(execution_times)
     population = [None] * population_size
@@ -87,7 +87,8 @@ def generateInitialSolutions(population_size: int) -> List[List[int]]:
             solution = [ randint(0, processor_count-1) for _ in range(process_count) ]
         else:
             solution = buildSolutionGreedy()
-        population[i] = solution
+        quality = measureSolutionQuality(solution)
+        population[i] = (quality, solution)
     return population
 
 
@@ -108,13 +109,13 @@ def buildSolutionGreedy() -> List[int]:
 
 
 # Usuwa najgorsze rozwiązania z populacji, tak by przywrócić jej pierwotny rozmiar
-def removeWorstSolutions(population: List[List[int]], target_size: int) -> None:
+def removeWorstSolutions(population: List[Tuple[int, List[int]]], target_size: int) -> None:
     while len(population) > target_size:
         population.pop()
 
 
 # Wybiera i rozmnaża rozwiązania, dodając je do populacji
-def performCrossOvers(population: List[List[int]]) -> None:
+def performCrossOvers(population: List[Tuple[int, List[int]]]) -> None:
     reproducible = int(POPULATION_SIZE * POPULATION_TO_CROSSOVER - 1e-9)
     for _ in range(CHILDREN_IN_ITERATION):
         parent1 = randint(0, reproducible)
@@ -126,18 +127,20 @@ def performCrossOvers(population: List[List[int]]) -> None:
 
 
 # Rozmnaża rozwiązania
-def crossOver(solution1: List[int], solution2: List[int]) -> List[int]:
+def crossOver(parent1: Tuple[int, List[int]], parent2: Tuple[int, List[int]]) -> Tuple[int, List[int]]:
+    solution1 = parent1[1]
+    solution2 = parent2[1]
     offspring = [0] * len(solution1)
     for i in range(len(solution1)):
         if solution1[i] == solution2[i]:
             offspring[i] = solution1[i]
         else:
             offspring[i] = solution1[i] if random() < 0.5 else solution2[i]
-    return offspring
+    return (measureSolutionQuality(offspring), offspring)
 
 
 # Wybiera rozwiązania i dokonuje mutacji
-def performMutations(population: List[List[int]]) -> None:
+def performMutations(population: List[Tuple[int, List[int]]]) -> None:
     global execution_times, processor_count
     for i in range(len(population)):
         if random() >= SOLUTION_MUTATION_CHANCE:
@@ -147,18 +150,18 @@ def performMutations(population: List[List[int]]) -> None:
 
 
 # Mutuje rozwiązanie i zwraca nową kopię
-def mutate(solution: List[int]) -> List[int]:
+def mutate(solution: Tuple[int, List[int]]) -> Tuple[int, List[int]]:
     global execution_times, processor_count
-    new_solution = solution.copy()
+    new_solution = solution[1].copy()
     for i in range(len(solution)):
         if random() < GENE_MUTATION_CHANCE:
             new_solution[i] = randint(0, processor_count-1)
-    return new_solution
+    return (measureSolutionQuality(new_solution), new_solution)
 
 
 # Sortuje populację od najlepszych rozwiązań
-def sortPopulation(population: List[List[int]]) -> None:
-    population.sort(key=lambda s: measureSolutionQuality(s))
+def sortPopulation(population: List[Tuple[int, List[int]]]) -> None:
+    population.sort(key=lambda s: s[0])
 
 
 # Mierzy jakość rozwiązania (im mniej tym lepiej)
