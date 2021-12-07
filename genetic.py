@@ -1,4 +1,4 @@
-from math import log10
+from math import inf, log10
 from load import loadData
 from random import random, randint, shuffle
 import sys
@@ -18,19 +18,19 @@ from typing import List, Tuple
 #
 
 # Konfiguracja algorytmu
-GENE_MUTATION_CHANCE = 0.03         # Prawdopodobieństwo mutacji genu w rozwiązaniu, które mutuje
 CHILDREN_IN_ITERATION = 50          # Liczba dzieci w iteracji algorytmu
 MAX_DURATION = 300                  # Maksymalny czas pracy w sekundach
-MAX_ITERATIONS = 500                # Maksymalna liczba iteracji
+MAX_ITERATIONS = 1e6                # Maksymalna liczba iteracji
 POPULATION_SIZE = 100               # Rozmiar populacji
 POPULATION_TO_DIE = 0.2             # Odsetek populacji, który zginie w iteracji
-RANDOM_SOLUTIONS = 0.5              # Odsetek losowych rozwiązań w pierwotnej populacji
-SOLUTION_MUTATION_CHANCE = 1        # Prawdopodobieństwo, że w rozwiązaniu zajdzie mutacja
+RANDOM_SOLUTIONS = 0.1              # Odsetek losowych rozwiązań w pierwotnej populacji
+SOLUTION_MUTATION_CHANCE = 0.01     # Prawdopodobieństwo, że w rozwiązaniu zajdzie mutacja
 
 # Diagnostyka
-PRINT_STATS_FREQ = 10               # Co ile iteracji wyświetlać status
+PRINT_STATS_FREQ = 100               # Co ile iteracji wyświetlać status
 
 # Zmienne związane z pracą programu
+all_time_best = inf
 best_cmaxes = []
 iterations = 0
 start_time = 0.0
@@ -41,7 +41,7 @@ processor_count = 0
 
 # Punkt wejściowy algorytmu
 def genetic(proc_count: int, exec_times: List[int]) -> None:
-    global best_cmaxes, iterations, start_time
+    global all_time_best, best_cmaxes, iterations, start_time
     global execution_times, processor_count
 
     execution_times = exec_times
@@ -53,6 +53,8 @@ def genetic(proc_count: int, exec_times: List[int]) -> None:
     while canContinue():
         population = doGeneticIteration(population)
         best_cmaxes.append(population[0][0])
+        if best_cmaxes[-1] < all_time_best:
+            all_time_best = best_cmaxes[-1]
         iterations += 1
         printStats()
 
@@ -129,16 +131,17 @@ def performCrossOvers(population: List[Tuple[int, List[int]]]) -> List[Tuple[int
 
     # Wypełnij tablicę dziećmi
     idx = 0
-    while len(children) < cross_overs:
+    while idx < cross_overs and idx+1 < len(children):
         # Wybierz dwa różne rozwiązania do rozmnożenia
         parent1 = select(population, pop_quality_sum)
         parent2 = select(population, pop_quality_sum)
         while parent1 == parent2:
             parent2 = select(population, pop_quality_sum)
         
-        child = crossOver(population[parent1], population[parent2])
-        children[idx] = child
-        idx += 1
+        child_arr = crossOver(population[parent1], population[parent2])
+        for child in child_arr:
+            children[idx] = child
+            idx += 1
 
     # Uzupełnij populację osobnikami z poprzedniej
     parents_to_survive = set()
@@ -154,16 +157,21 @@ def performCrossOvers(population: List[Tuple[int, List[int]]]) -> List[Tuple[int
 
 
 # Rozmnaża rozwiązania
-def crossOver(parent1: Tuple[int, List[int]], parent2: Tuple[int, List[int]]) -> Tuple[int, List[int]]:
+def crossOver(parent1: Tuple[int, List[int]], parent2: Tuple[int, List[int]]) -> List[Tuple[int, List[int]]]:
     solution1 = parent1[1]
     solution2 = parent2[1]
-    offspring = [0] * len(solution1)
-    for i in range(len(solution1)):
-        if solution1[i] == solution2[i]:
-            offspring[i] = solution1[i]
-        else:
-            offspring[i] = solution1[i] if random() < 0.5 else solution2[i]
-    return (measureSolutionCmax(offspring), offspring)
+    offspring_1 = solution1.copy()
+    offspring_2 = solution1.copy()
+
+    start = randint(0, len(solution1) - 1)
+    end = randint(start, len(solution1))
+
+    offspring_1[start:end] = solution2[start:end]
+    offspring_2[start:end] = solution1[start:end]
+
+    child1 = (measureSolutionCmax(offspring_1), offspring_1)
+    child2 = (measureSolutionCmax(offspring_2), offspring_2)
+    return [child1, child2]
 
 
 # Wybiera rozwiązania i dokonuje mutacji
@@ -173,17 +181,15 @@ def performMutations(population: List[Tuple[int, List[int]]]) -> None:
         if random() >= SOLUTION_MUTATION_CHANCE:
             continue
         population[i] = mutate(population[i])
-        #new_solution = mutate(population[i])
-        # population.append(new_solution)
 
 
 # Mutuje rozwiązanie i zwraca nową kopię
 def mutate(solution: Tuple[int, List[int]]) -> Tuple[int, List[int]]:
     global execution_times, processor_count
     new_solution = solution[1].copy()
-    for i in range(len(solution)):
-        if random() < GENE_MUTATION_CHANCE:
-            new_solution[i] = randint(0, processor_count-1)
+    pos = randint(0, len(new_solution) - 1)
+    new_solution[pos] = randint(0, processor_count-1)
+
     return (measureSolutionCmax(new_solution), new_solution)
 
 
@@ -228,12 +234,12 @@ def printStats() -> None:
         return
     duration = round(time() - start_time, 1)
     digits = int(log10(MAX_ITERATIONS)) + 1
-    print(f'[{iterations: >{digits}}]: {duration: >6}s elapsed, Cmax: {best_cmaxes[-1]}')
+    print(f'[{iterations: >{digits}}]: {duration: >6}s elapsed, Cmax: {best_cmaxes[-1]}, ATB: {all_time_best}')
 
 
 # Wypisuje końcowe statystyki
 def printFinalStats() -> None:
-    global best_cmaxes, iterations, start_time
+    global all_time_best, best_cmaxes, iterations, start_time
     global execution_times, processor_count
     optimum = round(sum(execution_times) / processor_count, 1)
 
@@ -242,9 +248,9 @@ def printFinalStats() -> None:
     print('\nFinished job')
     print(f'    {iterations} iterations performed')
     print(f'    {duration} seconds')
-    print(f'    \033[1;32m{best_cmaxes[-1]} = Cmax\033[0m')
+    print(f'    \033[1;32m{all_time_best} = Cmax\033[0m')
     print(f'    {optimum} = Cmax* <divisible tasks>')
-    print(f'    {best_cmaxes[0]} -> {best_cmaxes[-1]} genetic progress')
+    print(f'    {best_cmaxes[0]} -> {all_time_best} genetic progress')
 
 
 def main() -> None:
