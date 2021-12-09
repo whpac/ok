@@ -1,4 +1,4 @@
-from math import inf, log10
+from math import inf, log10, sqrt
 from load import loadData
 from random import random, randint, shuffle
 import sys
@@ -18,13 +18,16 @@ from typing import List, Tuple
 #
 
 # Konfiguracja algorytmu
-CHILDREN_IN_ITERATION = 50          # Liczba dzieci w iteracji algorytmu
-MAX_DURATION = 300                  # Maksymalny czas pracy w sekundach
-MAX_ITERATIONS = 1e6                # Maksymalna liczba iteracji
-POPULATION_SIZE = 100               # Rozmiar populacji
-POPULATION_TO_DIE = 0.2             # Odsetek populacji, który zginie w iteracji
-RANDOM_SOLUTIONS = 0.1              # Odsetek losowych rozwiązań w pierwotnej populacji
-SOLUTION_MUTATION_CHANCE = 0.01     # Prawdopodobieństwo, że w rozwiązaniu zajdzie mutacja
+CHILDREN_IN_ITERATION = 50              # Liczba dzieci w iteracji algorytmu
+MAX_DURATION = 300                      # Maksymalny czas pracy w sekundach
+MAX_ITERATIONS = 1e6                    # Maksymalna liczba iteracji
+POPULATION_SIZE = 100                   # Rozmiar populacji
+POPULATION_TO_DIE = 0.2                 # Odsetek populacji, który zginie w iteracji
+RANDOM_SOLUTIONS = 0.2                  # Odsetek losowych rozwiązań w pierwotnej populacji
+SOLUTION_CROSSOVER_CHANCE_GOOD = 0.8    # Prawdopodobieństwo, że dobre rozwiązaniu się rozmnoży
+SOLUTION_CROSSOVER_CHANCE_BAD = 0.6     # Prawdopodobieństwo, że złe rozwiązaniu się rozmnoży
+SOLUTION_MUTATION_CHANCE_GOOD = 0.03    # Prawdopodobieństwo, że w dobrym rozwiązaniu zajdzie mutacja
+SOLUTION_MUTATION_CHANCE_BAD = 0.01     # Prawdopodobieństwo, że w złym rozwiązaniu zajdzie mutacja
 
 # Diagnostyka
 PRINT_STATS_FREQ = 100               # Co ile iteracji wyświetlać status
@@ -50,6 +53,7 @@ def genetic(proc_count: int, exec_times: List[int]) -> None:
 
     population = generateInitialSolutions(POPULATION_SIZE)
     sortPopulation(population)
+    best_cmaxes.append(population[0][0])
     while canContinue():
         population = doGeneticIteration(population)
         best_cmaxes.append(population[0][0])
@@ -128,6 +132,7 @@ def performCrossOvers(population: List[Tuple[int, List[int]]]) -> List[Tuple[int
     cross_overs = len(population) * POPULATION_TO_DIE
     children = [None] * len(population)
     pop_quality_sum = sumQualities(population)
+    avg_quality = pop_quality_sum / len(population)
 
     # Wypełnij tablicę dziećmi
     idx = 0
@@ -137,6 +142,9 @@ def performCrossOvers(population: List[Tuple[int, List[int]]]) -> List[Tuple[int
         parent2 = select(population, pop_quality_sum)
         while parent1 == parent2:
             parent2 = select(population, pop_quality_sum)
+
+        if random() >= getCrossOverChance(population[parent1], population[parent2], avg_quality):
+            continue
         
         child_arr = crossOver(population[parent1], population[parent2])
         for child in child_arr:
@@ -154,6 +162,14 @@ def performCrossOvers(population: List[Tuple[int, List[int]]]) -> List[Tuple[int
         idx += 1
 
     return children
+
+
+# Oblicza prawdopodobieństwo krzyżowania dla rozwiązań
+def getCrossOverChance(solution1: Tuple[int, List[int]], solution2: Tuple[int, List[int]], avg_quality: float) -> float:
+    best_quality = 1 / best_cmaxes[-1]
+    curr_quality = max(1 / solution1[0], 1 / solution2[0])
+
+    return max(SOLUTION_CROSSOVER_CHANCE_GOOD * curr_quality / best_quality, SOLUTION_CROSSOVER_CHANCE_BAD)
 
 
 # Rozmnaża rozwiązania
@@ -177,18 +193,34 @@ def crossOver(parent1: Tuple[int, List[int]], parent2: Tuple[int, List[int]]) ->
 # Wybiera rozwiązania i dokonuje mutacji
 def performMutations(population: List[Tuple[int, List[int]]]) -> None:
     global execution_times, processor_count
+    avg_quality = sumQualities(population) / len(population)
     for i in range(len(population)):
-        if random() >= SOLUTION_MUTATION_CHANCE:
+        if random() >= getMutationChance(population[i], avg_quality):
             continue
         population[i] = mutate(population[i])
+
+
+# Oblicza prawdopodobieństwo mutacji dla rozwiązania
+def getMutationChance(solution: Tuple[int, List[int]], avg_quality: float) -> float:
+    best_quality = 1 / best_cmaxes[-1]
+    curr_quality = 1 / solution[0]
+
+    if curr_quality > avg_quality:
+        if best_quality == avg_quality:
+            return SOLUTION_MUTATION_CHANCE_GOOD
+        return SOLUTION_MUTATION_CHANCE_GOOD * (best_quality - curr_quality) / (best_quality - avg_quality)
+    else:
+        return SOLUTION_MUTATION_CHANCE_BAD
 
 
 # Mutuje rozwiązanie i zwraca nową kopię
 def mutate(solution: Tuple[int, List[int]]) -> Tuple[int, List[int]]:
     global execution_times, processor_count
     new_solution = solution[1].copy()
-    pos = randint(0, len(new_solution) - 1)
-    new_solution[pos] = randint(0, processor_count-1)
+    pos1 = randint(0, len(new_solution) - 1)
+    pos2 = randint(0, len(new_solution) - 1)
+    new_solution[pos1] = solution[1][pos2]
+    new_solution[pos2] = solution[1][pos1]
 
     return (measureSolutionCmax(new_solution), new_solution)
 
