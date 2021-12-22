@@ -26,10 +26,8 @@ MUTATIONS_IN_SOLUTION = 2               # Liczba mutacji w rozwiązaniu
 POPULATION_SIZE = 100                   # Rozmiar populacji
 POPULATION_TO_DIE = 0.2                 # Odsetek populacji, który zginie w iteracji
 RANDOM_SOLUTIONS = 0.8                  # Odsetek losowych rozwiązań w pierwotnej populacji
-SOLUTION_CROSSOVER_CHANCE_GOOD = 0.85   # Prawdopodobieństwo, że dobre rozwiązaniu się rozmnoży
-SOLUTION_CROSSOVER_CHANCE_BAD = 0.7     # Prawdopodobieństwo, że złe rozwiązaniu się rozmnoży
-SOLUTION_MUTATION_CHANCE_GOOD = 0.05    # Prawdopodobieństwo, że w dobrym rozwiązaniu zajdzie mutacja
-SOLUTION_MUTATION_CHANCE_BAD = 0.03     # Prawdopodobieństwo, że w złym rozwiązaniu zajdzie mutacja
+SOLUTION_CROSSOVER_CHANCE = 0.85        # Prawdopodobieństwo, że rozwiązanie się rozmnoży
+SOLUTION_MUTATION_CHANCE = 0.05         # Prawdopodobieństwo, że w rozwiązaniu zajdzie mutacja
 
 # Diagnostyka
 PRINT_STATS_FREQ = 100                  # Co ile iteracji wyświetlać status
@@ -137,7 +135,6 @@ def performCrossOvers(population: List[Tuple[int, List[int]]]) -> List[Tuple[int
     cross_overs = len(population) * POPULATION_TO_DIE
     children = [None] * len(population)
     pop_quality_sum = sumQualities(population)
-    avg_quality = pop_quality_sum / len(population)
 
     # Wypełnij tablicę dziećmi
     idx = 0
@@ -148,7 +145,7 @@ def performCrossOvers(population: List[Tuple[int, List[int]]]) -> List[Tuple[int
         while parent1 == parent2:
             parent2 = select(population, pop_quality_sum)
 
-        if random() >= getCrossOverChance(population[parent1], population[parent2], avg_quality):
+        if random() >= SOLUTION_CROSSOVER_CHANCE:
             continue
         
         child_arr = crossOver(population[parent1], population[parent2])
@@ -167,14 +164,6 @@ def performCrossOvers(population: List[Tuple[int, List[int]]]) -> List[Tuple[int
         idx += 1
 
     return children
-
-
-# Oblicza prawdopodobieństwo krzyżowania dla rozwiązań
-def getCrossOverChance(solution1: Tuple[int, List[int]], solution2: Tuple[int, List[int]], avg_quality: float) -> float:
-    best_quality = 1 / best_cmaxes[-1]
-    curr_quality = max(1 / solution1[0], 1 / solution2[0])
-
-    return max(SOLUTION_CROSSOVER_CHANCE_GOOD * curr_quality / best_quality, SOLUTION_CROSSOVER_CHANCE_BAD)
 
 
 # Rozmnaża rozwiązania
@@ -198,27 +187,13 @@ def crossOver(parent1: Tuple[int, List[int]], parent2: Tuple[int, List[int]]) ->
 # Wybiera rozwiązania i dokonuje mutacji
 def performMutations(population: List[Tuple[int, List[int]]]) -> None:
     global execution_times, processor_count
-    avg_quality = sumQualities(population) / len(population)
     for i in range(len(population)):
-        if random() >= getMutationChance(population[i], avg_quality):
+        if random() >= SOLUTION_MUTATION_CHANCE:
             continue
         if random() <= GREEDY_MUTATION_CHANCE:
             population[i] = greedyMutate(population[i])
         else:
             population[i] = mutate(population[i])
-
-
-# Oblicza prawdopodobieństwo mutacji dla rozwiązania
-def getMutationChance(solution: Tuple[int, List[int]], avg_quality: float) -> float:
-    best_quality = 1 / best_cmaxes[-1]
-    curr_quality = 1 / solution[0]
-
-    if curr_quality > avg_quality:
-        if best_quality == avg_quality:
-            return SOLUTION_MUTATION_CHANCE_GOOD
-        return SOLUTION_MUTATION_CHANCE_GOOD * (best_quality - curr_quality) / (best_quality - avg_quality)
-    else:
-        return SOLUTION_MUTATION_CHANCE_BAD
 
 
 # Mutuje rozwiązanie i zwraca nową kopię
