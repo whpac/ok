@@ -1,4 +1,4 @@
-from math import inf, log10, sqrt
+from math import inf, log10
 from load import loadData
 from random import random, randint, shuffle
 import sys
@@ -20,7 +20,8 @@ from typing import List, Tuple
 # Konfiguracja algorytmu
 MAX_DURATION = 300                      # Maksymalny czas pracy w sekundach
 MAX_ITERATIONS = 1e6                    # Maksymalna liczba iteracji
-MIGRATION_CHANCE = 1e-4                 # Prawdopodobieństwo migracji
+MIGRATION_CHANCE = 1e-3                 # Prawdopodobieństwo migracji
+MUTATIONS_IN_SOLUTION = 2               # Liczba mutacji w rozwiązaniu
 POPULATION_SIZE = 100                   # Rozmiar populacji
 POPULATION_TO_DIE = 0.2                 # Odsetek populacji, który zginie w iteracji
 RANDOM_SOLUTIONS = 0.95                 # Odsetek losowych rozwiązań w pierwotnej populacji
@@ -30,7 +31,7 @@ SOLUTION_MUTATION_CHANCE_GOOD = 0.05    # Prawdopodobieństwo, że w dobrym rozw
 SOLUTION_MUTATION_CHANCE_BAD = 0.03     # Prawdopodobieństwo, że w złym rozwiązaniu zajdzie mutacja
 
 # Diagnostyka
-PRINT_STATS_FREQ = 100               # Co ile iteracji wyświetlać status
+PRINT_STATS_FREQ = 100                  # Co ile iteracji wyświetlać status
 
 # Zmienne związane z pracą programu
 all_time_best = inf
@@ -220,10 +221,11 @@ def getMutationChance(solution: Tuple[int, List[int]], avg_quality: float) -> fl
 def mutate(solution: Tuple[int, List[int]]) -> Tuple[int, List[int]]:
     global execution_times, processor_count
     new_solution = solution[1].copy()
-    pos1 = randint(0, len(new_solution) - 1)
-    pos2 = randint(0, len(new_solution) - 1)
-    new_solution[pos1] = solution[1][pos2]
-    new_solution[pos2] = solution[1][pos1]
+    for _ in range(MUTATIONS_IN_SOLUTION):
+        pos1 = randint(0, len(new_solution) - 1)
+        pos2 = randint(0, len(new_solution) - 1)
+        new_solution[pos1] = solution[1][pos2]
+        new_solution[pos2] = solution[1][pos1]
 
     return (measureSolutionCmax(new_solution), new_solution)
 
