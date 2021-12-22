@@ -18,14 +18,14 @@ from typing import List, Tuple
 #
 
 # Konfiguracja algorytmu
-GREEDY_MUTATION_CHANCE = 0.1            # Prawdopodobieństwo, że mutacja będzie zachłanna
+GREEDY_MUTATION_CHANCE = 0.3            # Prawdopodobieństwo, że mutacja będzie zachłanna
 MAX_DURATION = 300                      # Maksymalny czas pracy w sekundach
 MAX_ITERATIONS = 1e6                    # Maksymalna liczba iteracji
-MIGRATION_CHANCE = 1e-3                 # Prawdopodobieństwo migracji
+MIGRATION_CHANCE = 0.002                # Prawdopodobieństwo migracji
 MUTATIONS_IN_SOLUTION = 2               # Liczba mutacji w rozwiązaniu
 POPULATION_SIZE = 100                   # Rozmiar populacji
-POPULATION_TO_DIE = 0.2                 # Odsetek populacji, który zginie w iteracji
-RANDOM_SOLUTIONS = 0.8                  # Odsetek losowych rozwiązań w pierwotnej populacji
+POPULATION_TO_DIE = 0.15                # Odsetek populacji, który zginie w iteracji
+RANDOM_SOLUTIONS = 0.5                  # Odsetek losowych rozwiązań w pierwotnej populacji
 SOLUTION_CROSSOVER_CHANCE = 0.85        # Prawdopodobieństwo, że rozwiązanie się rozmnoży
 SOLUTION_MUTATION_CHANCE = 0.05         # Prawdopodobieństwo, że w rozwiązaniu zajdzie mutacja
 
