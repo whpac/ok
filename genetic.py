@@ -18,16 +18,16 @@ from typing import List, Tuple
 #
 
 # Konfiguracja algorytmu
-CHILDREN_IN_ITERATION = 50              # Liczba dzieci w iteracji algorytmu
 MAX_DURATION = 300                      # Maksymalny czas pracy w sekundach
 MAX_ITERATIONS = 1e6                    # Maksymalna liczba iteracji
+MIGRATION_CHANCE = 1e-4                 # Prawdopodobieństwo migracji
 POPULATION_SIZE = 100                   # Rozmiar populacji
 POPULATION_TO_DIE = 0.2                 # Odsetek populacji, który zginie w iteracji
-RANDOM_SOLUTIONS = 0.2                  # Odsetek losowych rozwiązań w pierwotnej populacji
-SOLUTION_CROSSOVER_CHANCE_GOOD = 0.8    # Prawdopodobieństwo, że dobre rozwiązaniu się rozmnoży
-SOLUTION_CROSSOVER_CHANCE_BAD = 0.6     # Prawdopodobieństwo, że złe rozwiązaniu się rozmnoży
-SOLUTION_MUTATION_CHANCE_GOOD = 0.03    # Prawdopodobieństwo, że w dobrym rozwiązaniu zajdzie mutacja
-SOLUTION_MUTATION_CHANCE_BAD = 0.01     # Prawdopodobieństwo, że w złym rozwiązaniu zajdzie mutacja
+RANDOM_SOLUTIONS = 0.95                 # Odsetek losowych rozwiązań w pierwotnej populacji
+SOLUTION_CROSSOVER_CHANCE_GOOD = 0.85   # Prawdopodobieństwo, że dobre rozwiązaniu się rozmnoży
+SOLUTION_CROSSOVER_CHANCE_BAD = 0.7     # Prawdopodobieństwo, że złe rozwiązaniu się rozmnoży
+SOLUTION_MUTATION_CHANCE_GOOD = 0.05    # Prawdopodobieństwo, że w dobrym rozwiązaniu zajdzie mutacja
+SOLUTION_MUTATION_CHANCE_BAD = 0.03     # Prawdopodobieństwo, że w złym rozwiązaniu zajdzie mutacja
 
 # Diagnostyka
 PRINT_STATS_FREQ = 100               # Co ile iteracji wyświetlać status
@@ -35,6 +35,7 @@ PRINT_STATS_FREQ = 100               # Co ile iteracji wyświetlać status
 # Zmienne związane z pracą programu
 all_time_best = inf
 best_cmaxes = []
+best_solution = None
 iterations = 0
 start_time = 0.0
 
@@ -44,7 +45,7 @@ processor_count = 0
 
 # Punkt wejściowy algorytmu
 def genetic(proc_count: int, exec_times: List[int]) -> None:
-    global all_time_best, best_cmaxes, iterations, start_time
+    global all_time_best, best_cmaxes, best_solution, iterations, start_time
     global execution_times, processor_count
 
     execution_times = exec_times
@@ -59,6 +60,7 @@ def genetic(proc_count: int, exec_times: List[int]) -> None:
         best_cmaxes.append(population[0][0])
         if best_cmaxes[-1] < all_time_best:
             all_time_best = best_cmaxes[-1]
+            best_solution = population[0]
         iterations += 1
         printStats()
 
@@ -90,6 +92,7 @@ def canContinue() -> bool:
 def doGeneticIteration(population: List[Tuple[int, List[int]]]) -> List[Tuple[int, List[int]]]:
     population = performCrossOvers(population)
     performMutations(population)
+    performMigration(population)
     sortPopulation(population)
     return population
 
@@ -228,6 +231,16 @@ def mutate(solution: Tuple[int, List[int]]) -> Tuple[int, List[int]]:
 # Sortuje populację od najlepszych rozwiązań
 def sortPopulation(population: List[Tuple[int, List[int]]]) -> None:
     population.sort(key=lambda s: s[0])
+
+
+# Dokonuje migracji dobrego rozwiązania do populacji
+def performMigration(population: List[Tuple[int, List[int]]]) -> None:
+    if random() <= MIGRATION_CHANCE:
+        if all_time_best < best_cmaxes[-1]:
+            population[-1] = best_solution
+        else:
+            solution = buildSolutionGreedy()
+            population[-1] = (measureSolutionCmax(solution), solution)
 
 
 # Mierzy Cmax rozwiązania (im mniej tym lepiej)
