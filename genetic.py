@@ -18,13 +18,14 @@ from typing import List, Tuple
 #
 
 # Konfiguracja algorytmu
+GREEDY_MUTATION_CHANCE = 0.1            # Prawdopodobieństwo, że mutacja będzie zachłanna
 MAX_DURATION = 300                      # Maksymalny czas pracy w sekundach
 MAX_ITERATIONS = 1e6                    # Maksymalna liczba iteracji
 MIGRATION_CHANCE = 1e-3                 # Prawdopodobieństwo migracji
 MUTATIONS_IN_SOLUTION = 2               # Liczba mutacji w rozwiązaniu
 POPULATION_SIZE = 100                   # Rozmiar populacji
 POPULATION_TO_DIE = 0.2                 # Odsetek populacji, który zginie w iteracji
-RANDOM_SOLUTIONS = 0.95                 # Odsetek losowych rozwiązań w pierwotnej populacji
+RANDOM_SOLUTIONS = 0.8                  # Odsetek losowych rozwiązań w pierwotnej populacji
 SOLUTION_CROSSOVER_CHANCE_GOOD = 0.85   # Prawdopodobieństwo, że dobre rozwiązaniu się rozmnoży
 SOLUTION_CROSSOVER_CHANCE_BAD = 0.7     # Prawdopodobieństwo, że złe rozwiązaniu się rozmnoży
 SOLUTION_MUTATION_CHANCE_GOOD = 0.05    # Prawdopodobieństwo, że w dobrym rozwiązaniu zajdzie mutacja
@@ -201,7 +202,10 @@ def performMutations(population: List[Tuple[int, List[int]]]) -> None:
     for i in range(len(population)):
         if random() >= getMutationChance(population[i], avg_quality):
             continue
-        population[i] = mutate(population[i])
+        if random() <= GREEDY_MUTATION_CHANCE:
+            population[i] = greedyMutate(population[i])
+        else:
+            population[i] = mutate(population[i])
 
 
 # Oblicza prawdopodobieństwo mutacji dla rozwiązania
@@ -228,6 +232,38 @@ def mutate(solution: Tuple[int, List[int]]) -> Tuple[int, List[int]]:
         new_solution[pos2] = solution[1][pos1]
 
     return (measureSolutionCmax(new_solution), new_solution)
+
+
+def greedyMutate(solution: Tuple[int, List[int]]) -> Tuple[int, List[int]]:
+    global execution_times, processor_count
+    processor_usage = [0] * processor_count
+
+    new_assignment = solution[1].copy()
+
+    for i in range(len(solution[1])):
+        proc = solution[1][i]
+        processor_usage[proc] += execution_times[i]
+
+    for _ in range(5):
+        min_load = [inf, -1]    # [value, index]
+        max_load = [0, -1]
+        for i in range(len(processor_usage)):
+            if processor_usage[i] < min_load[0]:
+                min_load[0] = processor_usage[i]
+                min_load[1] = i
+            if processor_usage[i] > max_load[0]:
+                max_load[0] = processor_usage[i]
+                max_load[1] = i
+        shortest_task = [inf, -1]    # [value, index]
+        for i in range(len(new_assignment)):
+            if new_assignment[i] == max_load[1] and execution_times[i] < shortest_task[0]:
+                shortest_task[0] = execution_times[i]
+                shortest_task[1] = i
+        new_assignment[shortest_task[1]] = min_load[1]
+        processor_usage[min_load[1]] += shortest_task[0]
+        processor_usage[max_load[1]] -= shortest_task[0]
+
+    return (measureSolutionCmax(new_assignment), new_assignment)
 
 
 # Sortuje populację od najlepszych rozwiązań
