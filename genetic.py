@@ -165,7 +165,7 @@ def crossOver(parent1: Tuple[int, List[int]], parent2: Tuple[int, List[int]]) ->
     solution1 = parent1[1]
     solution2 = parent2[1]
     offspring_1 = solution1.copy()
-    offspring_2 = solution1.copy()
+    offspring_2 = solution2.copy()
 
     start = randint(0, len(solution1) - 1)
     end = randint(start, len(solution1))
