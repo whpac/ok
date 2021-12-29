@@ -11,11 +11,6 @@ from typing import List, Tuple
 # Ta realizacja pozwala na oszczędność w czasie działania i jest o ok. 70% szybsza
 # niż przechowywanie poszczególnych rozwiązań jako obiektów klasy Solution.
 #
-# Jakość a Cmax. Cmax jest chwilą, w której zakończy się ostatnie zadanie. Wobec
-# tego, pożądana jest minimalizacja tej wielkości. Jednak na potrzeby algorytmu
-# konieczne było wprowadzenie miary jakości, którą należy zmaksymalizować.
-# Dlatego za jakość przyjęto 1/Cmax
-#
 
 # Konfiguracja algorytmu
 GREEDY_MUTATION_CHANCE = 0.3            # Prawdopodobieństwo, że mutacja będzie zachłanna
@@ -134,16 +129,15 @@ def buildSolutionGreedy() -> List[int]:
 def performCrossOvers(population: List[Tuple[int, List[int]]]) -> List[Tuple[int, List[int]]]:
     cross_overs = len(population) * POPULATION_TO_DIE
     children = [None] * len(population)
-    pop_quality_sum = sumQualities(population)
 
     # Wypełnij tablicę dziećmi
     idx = 0
     while idx < cross_overs and idx+1 < len(children):
         # Wybierz dwa różne rozwiązania do rozmnożenia
-        parent1 = select(population, pop_quality_sum)
-        parent2 = select(population, pop_quality_sum)
+        parent1 = select(population)
+        parent2 = select(population)
         while parent1 == parent2:
-            parent2 = select(population, pop_quality_sum)
+            parent2 = select(population)
 
         if random() >= SOLUTION_CROSSOVER_CHANCE:
             continue
@@ -156,7 +150,7 @@ def performCrossOvers(population: List[Tuple[int, List[int]]]) -> List[Tuple[int
     # Uzupełnij populację osobnikami z poprzedniej
     parents_to_survive = set()
     while idx < len(children):
-        parent = select(population, pop_quality_sum)
+        parent = select(population)
         if parent in parents_to_survive:
             continue
         parents_to_survive.add(parent)
@@ -266,24 +260,9 @@ def measureSolutionCmax(solution: List[int]) -> None:
     return max(processor_occupancy)
 
 
-# Sumuje jakości rozwiązań w populacji
-def sumQualities(population: List[Tuple[int, List[int]]]) -> float:
-    quality_sum = 0
-    for (cmax, _) in population:
-        quality_sum += 1 / cmax
-    return quality_sum
-
-
 # Zwraca indeks rozwiązania z puli
-def select(population: List[Tuple[int, List[int]]], quality_sum: float) -> int:
-    r = random() * quality_sum
-    for i in range(len(population)):
-        cmax = population[i][0]
-        r -= 1 / cmax
-        if r <= 0:
-            return i
-
-    return len(population) - 1
+def select(population: List[Tuple[int, List[int]]]) -> int:
+    return randint(0, len(population) - 1)
 
 
 # Wypisuje statystyki co określoną liczbę iteracji
