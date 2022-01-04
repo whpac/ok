@@ -1,3 +1,4 @@
+from export import export
 from math import inf, log10
 from load import loadData
 from random import random, randint, shuffle
@@ -25,6 +26,7 @@ SOLUTION_CROSSOVER_CHANCE = 0.85        # Prawdopodobieństwo, że rozwiązanie 
 SOLUTION_MUTATION_CHANCE = 0.05         # Prawdopodobieństwo, że w rozwiązaniu zajdzie mutacja
 
 # Diagnostyka
+ENABLE_EXPORT = False
 PRINT_STATS_FREQ = 100                  # Co ile iteracji wyświetlać status
 
 # Zmienne związane z pracą programu
@@ -50,7 +52,10 @@ def genetic(proc_count: int, exec_times: List[int]) -> None:
     population = generateInitialSolutions(POPULATION_SIZE)
     sortPopulation(population)
     best_cmaxes.append(population[0][0])
+    best_solution = population[0]
     while canContinue():
+        if iterations % PRINT_STATS_FREQ == 0 and ENABLE_EXPORT:
+            export(iterations, processor_count, execution_times, best_solution[1])
         population = doGeneticIteration(population)
         best_cmaxes.append(population[0][0])
         if best_cmaxes[-1] < all_time_best:
@@ -58,6 +63,8 @@ def genetic(proc_count: int, exec_times: List[int]) -> None:
             best_solution = population[0]
         iterations += 1
         printStats()
+    if ENABLE_EXPORT:
+        export(iterations, processor_count, execution_times, best_solution[1])
 
 
 # Sprawdza czas trwania, Cmax rozwiązania i ew. inne metryki i decyduje czy kontynuować
